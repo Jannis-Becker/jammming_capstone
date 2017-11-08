@@ -3,6 +3,7 @@ import './App.css';
 import SearchBar from '../SearchBar/SearchBar';
 import SearchResults from '../SearchResults/SearchResults';
 import Playlist from '../Playlist/Playlist';
+import UserPlaylist from '../UserPlaylist/UserPlaylist';
 import Spotify from '../../util/Spotify';
 
 class App extends Component {
@@ -87,6 +88,7 @@ class App extends Component {
               onNameChange={this.updatePlaylistName}
               onSave={this.savePlaylist}
             />
+            <UserPlaylist />
           </div>
         </div>
       </div>

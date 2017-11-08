@@ -18,7 +18,12 @@ let Spotify = {
       window.history.pushState('Access Token', null, '/');
       return accessToken;
     } else {
-      window.location.href = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
+      var scopes =
+        'user-read-private playlist-read-private playlist-modify-private playlist-modify-public user-read-email';
+      console.log('scopes', encodeURIComponent(scopes));
+      window.location.href = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token${scopes
+        ? '&scope=' + encodeURIComponent(scopes)
+        : ''}&redirect_uri=${redirectUri}`;
     }
   },
 
@@ -89,6 +94,79 @@ let Spotify = {
               }
             );
           });
+      });
+  },
+  // unfollowPlaylist() {
+  //
+  // },
+
+  loadUserPlaylists() {
+    const accessToken = Spotify.getAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`
+    };
+    let user;
+    return fetch('https://api.spotify.com/v1/me', { headers: headers })
+      .then(response => response.json())
+      .then(jsonResponse => {
+        console.log(jsonResponse);
+        user = jsonResponse.id;
+        console.log(user);
+        return fetch(`https://api.spotify.com/v1/users/${user}/playlists`, {
+          headers: headers
+        })
+          .then(
+            response => {
+              console.log(response);
+              if (response.ok) {
+                return response.json();
+              }
+              throw new Error('Request Failed');
+            },
+            networkError => {
+              console.log(networkError.message);
+            }
+          )
+          .then(jsonResponse => {
+            console.log(jsonResponse);
+            return jsonResponse.items.map(playlist => ({
+              id: playlist.id,
+              name: playlist.name
+            }));
+          });
+      });
+  },
+
+  removeUserPlaylist(playlist_id) {
+    const accessToken = Spotify.getAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`
+    };
+    let user;
+    return fetch('https://api.spotify.com/v1/me', { headers: headers })
+      .then(response => response.json())
+      .then(jsonResponse => {
+        console.log(jsonResponse);
+        user = jsonResponse.id;
+        console.log(user);
+        return fetch(
+          `https://api.spotify.com/v1/users/${user}/playlists/${playlist_id}/followers`,
+          {
+            headers: headers,
+            method: 'delete'
+          }
+        ).then(
+          response => {
+            console.log(response);
+            if (response.ok) {
+              return true;
+            }
+            throw new Error('Request Failed');
+          },
+          networkError => {
+            console.log(networkError.message);
+          }
+        );
       });
   }
 };

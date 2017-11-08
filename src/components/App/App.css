@@ -9,7 +9,7 @@ html {
 }
 
 h1 {
-  padding: .77rem 0;
+  padding: 0.77rem 0;
   background-color: #010c3f;
   text-align: center;
   font-family: 'Poppins', sans-serif;
@@ -28,7 +28,7 @@ h2 {
 
 .App {
   height: 100%;
-  padding: 0 17% 10% 17%;
+  padding: 0 10% 10% 10%;
   background-image: url('./background_photo_desktop.jpg');
   background-size: cover;
   background-position: center;
