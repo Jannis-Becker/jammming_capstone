@@ -1,6 +1,7 @@
 let accessToken = '';
 const clientId = 'd8c09b6a8c774af2844a5e9b88ac6e44';
 const redirectUri = 'http://localhost:3000/';
+let userId = '';
 
 let Spotify = {
   getAccessToken() {
@@ -62,6 +63,34 @@ let Spotify = {
       });
   },
 
+  async getCurrentUserId() {
+    console.log('getCurrentUserId');
+    if (userId) {
+      console.log('userId');
+      return userId;
+    }
+
+    const accessToken = Spotify.getAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`
+    };
+
+    try {
+      let response = await fetch('https://api.spotify.com/v1/me', {
+        headers: headers
+      });
+      if (response.ok) {
+        let jsonResponse = await response.json();
+        console.log(jsonResponse.id);
+        return jsonResponse.id;
+      }
+
+      throw new Error('Request failed!');
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
   savePlaylist(playlistName, tracks) {
     if (!playlistName || !tracks.length) {
       return;
@@ -71,70 +100,68 @@ let Spotify = {
     const headers = {
       Authorization: `Bearer ${accessToken}`
     };
-    let user;
 
-    return fetch('https://api.spotify.com/v1/me', { headers: headers })
-      .then(response => response.json())
-      .then(jsonResponse => {
-        user = jsonResponse.id;
-        return fetch(`https://api.spotify.com/v1/users/${user}/playlists`, {
-          headers: headers,
-          method: 'POST',
-          body: JSON.stringify({ name: playlistName })
-        })
-          .then(response => response.json())
-          .then(jsonResponse => {
-            const playlistId = jsonResponse.id;
-            return fetch(
-              `https://api.spotify.com/v1/users/${user}/playlists/${playlistId}/tracks`,
-              {
-                headers: headers,
-                method: 'POST',
-                body: JSON.stringify({ uris: tracks })
-              }
-            );
-          });
-      });
+    if (!userId) {
+      userId = Spotify.getCurrentUserId();
+    }
+
+    userId.then(userId => {
+      console.log('userId', userId);
+      return fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+        headers: headers,
+        method: 'POST',
+        body: JSON.stringify({ name: playlistName })
+      })
+        .then(response => response.json())
+        .then(jsonResponse => {
+          const playlistId = jsonResponse.id;
+          return fetch(
+            `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`,
+            {
+              headers: headers,
+              method: 'POST',
+              body: JSON.stringify({ uris: tracks })
+            }
+          );
+        });
+    });
   },
-  // unfollowPlaylist() {
-  //
-  // },
 
-  loadUserPlaylists() {
+  getUserPlaylists() {
     const accessToken = Spotify.getAccessToken();
     const headers = {
       Authorization: `Bearer ${accessToken}`
     };
-    let user;
-    return fetch('https://api.spotify.com/v1/me', { headers: headers })
-      .then(response => response.json())
-      .then(jsonResponse => {
-        console.log(jsonResponse);
-        user = jsonResponse.id;
-        console.log(user);
-        return fetch(`https://api.spotify.com/v1/users/${user}/playlists`, {
-          headers: headers
-        })
-          .then(
-            response => {
-              console.log(response);
-              if (response.ok) {
-                return response.json();
-              }
-              throw new Error('Request Failed');
-            },
-            networkError => {
-              console.log(networkError.message);
+
+    if (!userId) {
+      userId = Spotify.getCurrentUserId();
+    }
+
+    return userId.then(userId => {
+      console.log('test');
+      return fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+        headers: headers
+      })
+        .then(
+          response => {
+            console.log(response);
+            if (response.ok) {
+              return response.json();
             }
-          )
-          .then(jsonResponse => {
-            console.log(jsonResponse);
-            return jsonResponse.items.map(playlist => ({
-              id: playlist.id,
-              name: playlist.name
-            }));
-          });
-      });
+            throw new Error('Request Failed');
+          },
+          networkError => {
+            console.log(networkError.message);
+          }
+        )
+        .then(jsonResponse => {
+          console.log(jsonResponse);
+          return jsonResponse.items.map(playlist => ({
+            id: playlist.id,
+            name: playlist.name
+          }));
+        });
+    });
   },
 
   removeUserPlaylist(playlist_id) {
@@ -142,32 +169,30 @@ let Spotify = {
     const headers = {
       Authorization: `Bearer ${accessToken}`
     };
-    let user;
-    return fetch('https://api.spotify.com/v1/me', { headers: headers })
-      .then(response => response.json())
-      .then(jsonResponse => {
-        console.log(jsonResponse);
-        user = jsonResponse.id;
-        console.log(user);
-        return fetch(
-          `https://api.spotify.com/v1/users/${user}/playlists/${playlist_id}/followers`,
-          {
-            headers: headers,
-            method: 'delete'
+    if (!userId) {
+      userId = Spotify.getCurrentUserId();
+    }
+
+    return userId.then(userId => {
+      return fetch(
+        `https://api.spotify.com/v1/users/${userId}/playlists/${playlist_id}/followers`,
+        {
+          headers: headers,
+          method: 'delete'
+        }
+      ).then(
+        response => {
+          console.log(response);
+          if (response.ok) {
+            return true;
           }
-        ).then(
-          response => {
-            console.log(response);
-            if (response.ok) {
-              return true;
-            }
-            throw new Error('Request Failed');
-          },
-          networkError => {
-            console.log(networkError.message);
-          }
-        );
-      });
+          throw new Error('Request Failed');
+        },
+        networkError => {
+          console.log(networkError.message);
+        }
+      );
+    });
   }
 };
 

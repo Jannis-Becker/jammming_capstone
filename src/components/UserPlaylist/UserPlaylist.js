@@ -9,12 +9,12 @@ class UserPlaylist extends Component {
     this.state = {
       playlists: []
     };
-    this.loadUserPlaylists = this.loadUserPlaylists.bind(this);
+    this.getUserPlaylists = this.getUserPlaylists.bind(this);
     this.onRemovePlaylist = this.onRemovePlaylist.bind(this);
   }
 
-  loadUserPlaylists() {
-    Spotify.loadUserPlaylists().then(playlist => {
+  getUserPlaylists() {
+    Spotify.getUserPlaylists().then(playlist => {
       console.log(playlist);
       this.setState({
         playlists: playlist
@@ -42,7 +42,7 @@ class UserPlaylist extends Component {
     return (
       <div className="UserPlaylist">
         <h2>User playlists</h2>
-        <a className="UserPlaylist-save" onClick={this.loadUserPlaylists}>
+        <a className="UserPlaylist-save" onClick={this.getUserPlaylists}>
           Load playlists
         </a>
         <ul>
